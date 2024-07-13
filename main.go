@@ -1,29 +1,30 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"net/http"
+
+	"github.com/cinarci/myserver/handlers"
+	"github.com/cinarci/myserver/models"
 )
 
-func helloHandler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.Error(w, "404 not found.", http.StatusNotFound)
-		return
-	}
-
-	if r.Method != "GET" {
-		http.Error(w, "Method is not supported.", http.StatusNotFound)
-		return
-	}
-
-	fmt.Fprintf(w, "Hello, World!")
-}
-
 func main() {
-	http.HandleFunc("/", helloHandler)
+	// Veritabanı bağlantısını başlat
+	models.ConnectDatabase()
 
-	fmt.Printf("Starting server at port 8080\n")
+	// HTTP handler'ları ve middleware'i ayarla
+	http.HandleFunc("/addresses", handlers.GetAddresses)
+	http.HandleFunc("/address", handlers.CreateAddress)
+	http.HandleFunc("/shipments", handlers.GetShipments)
+	http.HandleFunc("/shipment", handlers.CreateShipment)
+	http.HandleFunc("/generate-api-key", handlers.GenerateApiKey)
+
+	// Middleware'i tüm rotalar için uygula
+	http.Handle("/", handlers.ApiKeyMiddleware(http.DefaultServeMux))
+
+	// Sunucuyu başlat
+	log.Println("Server starting at port 8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
-		fmt.Printf("could not start server: %s\n", err)
+		log.Fatalf("could not start server: %s\n", err)
 	}
 }

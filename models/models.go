@@ -8,10 +8,9 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-// DB global database variable
 var DB *sql.DB
 
-// User struct for user data
+// Kullanıcı veriler için user struct'ı
 type User struct {
 	ID        int    `json:"id"`
 	Username  string `json:"username"`
@@ -19,7 +18,7 @@ type User struct {
 	CreatedAt string `json:"created_at"`
 }
 
-// Address struct for address data
+// Adres verileri için adress struct'ı
 type Address struct {
 	ID         int    `json:"id"`
 	UserID     int    `json:"user_id"`
@@ -29,7 +28,7 @@ type Address struct {
 	CreatedAt  string `json:"created_at"`
 }
 
-// Shipment struct for shipment data
+// Gönderi verileri için gönderi struct'ı
 type Shipment struct {
 	ID                int     `json:"id"`
 	UserID            int     `json:"user_id"`
@@ -40,33 +39,33 @@ type Shipment struct {
 	CreatedAt         string  `json:"created_at"`
 }
 
-// ConnectDatabase initializes the database connection
+// Veri tabanı bağlantısını başlatan metod
 func ConnectDatabase() {
 	var err error
 
-	// Replace these parameters with your database configuration
+	// lokalde çalışan mysql veritabanı için bağlantı bilgisi.
 	dsn := "root:@tcp(127.0.0.1:3306)/cargo"
 
 	DB, err = sql.Open("mysql", dsn)
 	if err != nil {
-		log.Fatalf("Error opening database: %s", err)
+		log.Fatalf("Veri tabanı açılırken hata oluştu: %s", err)
 	}
 
 	err = DB.Ping()
 	if err != nil {
-		log.Fatalf("Error connecting to the database: %s", err)
+		log.Fatalf("Veritabanı bağlantısında hata: %s", err)
 	}
 
-	fmt.Println("Database connection established")
+	fmt.Println("Veri tabanı bağlantısı yapılmış durumda")
 }
 
-// SaveAPIKey saves the generated API key to the database
+// Oluşturulan API anahtarını veri tabanına kaydeden metod
 func SaveAPIKey(username, apiKey string) error {
 	_, err := DB.Exec("INSERT INTO users (username, api_key) VALUES (?, ?)", username, apiKey)
 	return err
 }
 
-// ValidateAPIKey checks if the provided API key is valid
+// Sağlanan API anahtarını doğrulayan metod
 func ValidateAPIKey(apiKey string) bool {
 	var count int
 	err := DB.QueryRow("SELECT COUNT(*) FROM users WHERE api_key = ?", apiKey).Scan(&count)
@@ -77,14 +76,14 @@ func ValidateAPIKey(apiKey string) bool {
 	return count > 0
 }
 
-// CreateAddress saves a new address to the database
+// Veri tabanında yeni bir adress oluşturma
 func CreateAddress(address Address) error {
 	_, err := DB.Exec("INSERT INTO addresses (user_id, address, city, postal_code) VALUES (?, ?, ?, ?)",
 		address.UserID, address.Address, address.City, address.PostalCode)
 	return err
 }
 
-// GetAddresses retrieves addresses for a user
+// Bir kullanıcının adresini alma
 func GetAddresses(userID int) ([]Address, error) {
 	rows, err := DB.Query("SELECT id, user_id, address, city, postal_code, created_at FROM addresses WHERE user_id = ?", userID)
 	if err != nil {
@@ -103,14 +102,14 @@ func GetAddresses(userID int) ([]Address, error) {
 	return addresses, nil
 }
 
-// CreateShipment saves a new shipment to the database
+// Veritabanında yeni bir gönderi oluşturma
 func CreateShipment(shipment Shipment) error {
 	_, err := DB.Exec("INSERT INTO shipments (user_id, sender_address_id, receiver_address_id, weight, status) VALUES (?, ?, ?, ?, ?)",
 		shipment.UserID, shipment.SenderAddressID, shipment.ReceiverAddressID, shipment.Weight, shipment.Status)
 	return err
 }
 
-// GetShipments retrieves shipments for a user
+// Bir kullanıcı için adresleri getirir.
 func GetShipments(userID int) ([]Shipment, error) {
 	rows, err := DB.Query("SELECT id, user_id, sender_address_id, receiver_address_id, weight, status, created_at FROM shipments WHERE user_id = ?", userID)
 	if err != nil {

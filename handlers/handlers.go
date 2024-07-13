@@ -12,22 +12,22 @@ import (
 	"github.com/google/uuid"
 )
 
-// Handler to handle GET requests for addresses
+// Adresler için get isteklerini işleyen handler
 func GetAddresses(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		http.Error(w, "İzin verilmeyen Method", http.StatusMethodNotAllowed)
 		return
 	}
 
 	userID, err := strconv.Atoi(r.URL.Query().Get("user_id"))
 	if err != nil {
-		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		http.Error(w, "Geçersiz User ID", http.StatusBadRequest)
 		return
 	}
 
 	addresses, err := models.GetAddresses(userID)
 	if err != nil {
-		log.Printf("Error querying database: %s", err)
+		log.Printf("Veri tabanı sorgusunda hata: %s", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
@@ -36,24 +36,24 @@ func GetAddresses(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(addresses)
 }
 
-// Handler to handle POST requests for addresses
+// Adresler için post isteklerini işleyen handler
 func CreateAddress(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		http.Error(w, "İzin verilmeyen method", http.StatusMethodNotAllowed)
 		return
 	}
 
 	var address models.Address
 	err := json.NewDecoder(r.Body).Decode(&address)
 	if err != nil {
-		log.Printf("Error decoding request body: %s", err)
+		log.Printf("İstek gövdesi işlenirken hata oluştu: %s", err)
 		http.Error(w, "Bad request", http.StatusBadRequest)
 		return
 	}
 
 	err = models.CreateAddress(address)
 	if err != nil {
-		log.Printf("Error inserting into database: %s", err)
+		log.Printf("Veri tabanına eklemede hata: %s", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
@@ -62,10 +62,10 @@ func CreateAddress(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(address)
 }
 
-// Handler to handle GET requests for shipments
+// Gönderiler için get isteklerini işleyen handler
 func GetShipments(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		http.Error(w, "İzin verilmeyen method", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -77,7 +77,7 @@ func GetShipments(w http.ResponseWriter, r *http.Request) {
 
 	shipments, err := models.GetShipments(userID)
 	if err != nil {
-		log.Printf("Error querying database: %s", err)
+		log.Printf("Veri tabanı sorgusunda hata: %s", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
@@ -86,24 +86,24 @@ func GetShipments(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(shipments)
 }
 
-// Handler to handle POST requests for shipments
+// Gönderi oluşturma için Post isteklerini işleyen handler
 func CreateShipment(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		http.Error(w, "İzin verilmeyen method", http.StatusMethodNotAllowed)
 		return
 	}
 
 	var shipment models.Shipment
 	err := json.NewDecoder(r.Body).Decode(&shipment)
 	if err != nil {
-		log.Printf("Error decoding request body: %s", err)
+		log.Printf("İstek gövdesi işlenirken hata oluştu: %s", err)
 		http.Error(w, "Bad request", http.StatusBadRequest)
 		return
 	}
 
 	err = models.CreateShipment(shipment)
 	if err != nil {
-		log.Printf("Error inserting into database: %s", err)
+		log.Printf("Veri tabanına eklemede hata: %s", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
@@ -112,32 +112,32 @@ func CreateShipment(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(shipment)
 }
 
-// Middleware to validate API key
+// API anahtarını doğrulamak için middleware
 func ApiKeyMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		apiKey := r.Header.Get("x-api-key")
 		if !models.ValidateAPIKey(apiKey) {
-			http.Error(w, "Forbidden", http.StatusForbidden)
+			http.Error(w, "Bu işlem için yetkiniz yok", http.StatusForbidden)
 			return
 		}
 		next.ServeHTTP(w, r)
 	})
 }
 
-// Handler to generate API key
+// Api anahtarı oluşturmak için handler
 func GenerateApiKey(w http.ResponseWriter, r *http.Request) {
 	username := r.URL.Query().Get("username")
 	if username == "" {
-		http.Error(w, "Username is required", http.StatusBadRequest)
+		http.Error(w, "Kullanıcı adı gereklidir", http.StatusBadRequest)
 		return
 	}
 
 	apiKey := uuid.New().String()
 	err := models.SaveAPIKey(username, apiKey)
 	if err != nil {
-		log.Printf("Error saving API key: %s", err)
+		log.Printf("API anahtarı kaydedilemedi.: %s", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
-	fmt.Fprintf(w, "Generated API key for %s: %s\n", username, apiKey)
+	fmt.Fprintf(w, username, "için oluşturulan API anahtarı %s: %s\n", apiKey)
 }

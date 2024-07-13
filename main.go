@@ -23,8 +23,8 @@ func main() {
 	http.Handle("/", handlers.ApiKeyMiddleware(http.DefaultServeMux))
 
 	// Sunucuyu başlat
-	log.Println("Server starting at port 8080")
+	log.Println("Sunucu 8080 portunda başlatıldı.")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
-		log.Fatalf("could not start server: %s\n", err)
+		log.Fatalf("sunucu başlatılamadı: %s\n", err)
 	}
 }

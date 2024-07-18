@@ -25,6 +25,6 @@ func main() {
 	// Sunucuyu başlat
 	log.Println("Sunucu 8080 portunda başlatıldı.")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
-		log.Fatalf("sunucu başlatılamadı: %s\n", err)
+		log.Fatalf("Sunucu başlatılamadı: %s\n", err)
 	}
 }
